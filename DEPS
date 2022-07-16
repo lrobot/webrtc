@@ -2425,6 +2425,7 @@ hooks = [
   },
   {
     # Download test resources, i.e. video and audio files from Google Storage.
+    'name': 'chromium-webrtc-resources',
     'pattern': '.',
     'action': ['download_from_google_storage',
                '--directory',
