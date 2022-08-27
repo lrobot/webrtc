@@ -2261,13 +2261,13 @@ hooks = [
     # Note: On Win, this should run after win_toolchain, as it may use it.
     'name': 'clang',
     'pattern': '.',
-    'action': ['python3', 'src/tools/clang/scripts/update.py'],
+    'action': ['python3', 'src/lrtc/scripts/clang_update.py'],
   },
   {
     # Update LASTCHANGE.
     'name': 'lastchange',
     'pattern': '.',
-    'action': ['python3', 'src/build/util/lastchange.py',
+    'action': ['python3', 'src/lrtc/scripts/lastchange.py', '--source-dir', 'src/build/util',
                '-o', 'src/build/util/LASTCHANGE'],
   },
   # Pull dsymutil binaries using checked-in hashes.
