@@ -176,7 +176,7 @@ if (is_ios || is_mac) {
     }
   }
 
-  if (!build_with_chromium) {
+  if (true||!build_with_chromium) {
     rtc_library("callback_logger_objc") {
       sources = [
         "objc/api/logging/RTCCallbackLogger.h",
@@ -219,7 +219,7 @@ if (is_ios || is_mac) {
     }
   }
 
-  if (!build_with_chromium) {
+  if (true||!build_with_chromium) {
     if (is_ios) {
       rtc_library("native_api_audio_device_module") {
         visibility = [ "*" ]
@@ -498,10 +498,10 @@ if (is_ios || is_mac) {
       deps = [
         ":base_objc",
         "../rtc_base:logging",
-        "//api/video:video_frame",
-        "//api/video:video_rtp_headers",
-        "//common_video",
-        "//rtc_base:checks",
+        "../api/video:video_frame",
+        "../api/video:video_rtp_headers",
+        "../common_video",
+        "../rtc_base:checks",
         "//third_party/libyuv",
       ]
       configs += [

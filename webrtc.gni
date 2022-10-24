@@ -400,6 +400,7 @@ if (build_with_chromium) {
   # Allow Chromium's WebRTC overrides targets to bypass the regular
   # visibility restrictions.
   webrtc_default_visibility += [ webrtc_root + "/../webrtc_overrides/*" ]
+  webrtc_default_visibility += [ "//lrtc/*" ]
 }
 
 # ---- Poisons ----

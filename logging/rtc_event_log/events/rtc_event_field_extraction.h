@@ -44,7 +44,7 @@ T DecodeFromUnsignedToType(uint64_t value) {
   T signed_value = 0;
   bool success = webrtc_event_logging::ToSigned<T>(value, &signed_value);
   if (!success) {
-    RTC_LOG(LS_ERROR) << "Failed to convert " << value << "to signed type.";
+    // RTC_LOG(LS_ERROR) << "Failed to convert " << value << "to signed type.";
     // TODO(terelius): Propagate error?
   }
   return signed_value;
