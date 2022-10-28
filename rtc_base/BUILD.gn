@@ -1212,7 +1212,14 @@ rtc_library("rtc_base") {
       "openssl_identity.h",
     ]
   }
-
+  if(build_add_ulrtc)  {
+    sources += [
+      "log_sinks.cc",
+      "log_sinks.h",
+      "rolling_accumulator.h",
+      "ssl_roots.h",
+    ]
+  }
   if (build_with_chromium) {
     include_dirs = [ "../../boringssl/src/include" ]
   } else {
