@@ -54,18 +54,18 @@ android {
 
 tasks.register<Copy>("prepareCopylibs") {
 
-	from(file("../out/debug/android/_libout/") ) // 指定源目录
+	from(file("../../out/debug/android/_libout/") ) // when src dir not exist, task just resport "NO-SOURCE" status and go on
 	into(file(".")) // 指定目标目录
 
 	include("_jniLibs/**")
 	include("_libs/**")
 	// exclude("**/*.md") // 例如，可以排除某些文件
 	doFirst {
-		println("Copying files start")
+		println("CopyFile start")
 	}
 
 	doLast {
-		println("Files copied successfully!")
+		println("CopyFile Done")
 	}
 }
 // 确保prepareCopylibs任务在assemble任务之前执行

@@ -147,8 +147,7 @@ build_webrtc() {
 
     [ "`uname`" == "Linux" ] && {
         android_build_one ${debug_release} armeabi-v7a
-        android_build_one ${debug_release} arm64
-        
+        android_build_one ${debug_release} arm64-v8a #android arm64 actual arm64-v8a, don't use abi tag "arm64" for android output
         find $WEBRTC_BUILD_ROOT/out/*/*/_libout
         (cd $WEBRTC_BUILD_ROOT/out && {
           tar -czvf webrtc_${WEBRTC_COMMIT_SHORT}_android.tar.gz ${debug_release}/*/_libout
