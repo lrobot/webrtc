@@ -118,7 +118,7 @@ function androidMoveJniLibs() {
 }
 function androidMoveJavaLib() {
     pushd ${WEBRTC_BUILD_ROOT}
-    LIB_FOLDER=out/${1}/${2}/_libout/_libs/${3}
+    LIB_FOLDER=out/${1}/${2}/_libout/_libs
     mkdir -p $LIB_FOLDER
     cp -av out/${1}/${2}/${3}/lib.java/sdk/android/libwebrtc.jar $LIB_FOLDER/
     popd
@@ -132,32 +132,34 @@ function androidRemoveBuild() {
 function android_build_one() {
     build_webrtc_one $1 android $2
     androidMoveJniLibs $1 android $2
-    androidMoveJavaCode $1 android $2
+    androidMoveJavaLib $1 android $2
     #androidRemoveBuild $1 android $2
 }
-build() {
+build_webrtc() {
+  debug_release=$1
     # PWD=Open3D
     WEBRTC_COMMIT_SHORT=$(git -C ${WEBRTC_BUILD_ROOT} rev-parse --short=7 HEAD)
 
     [ "`uname`" == "Darwin" ] && {
-        build_webrtc_one debug ios arm64-v8a
-        build_webrtc_one release ios arm64-v8a
-        build_webrtc_one debub mac x64
-        build_webrtc_one release mac x64
+        build_webrtc_one ${debug_release} ios arm64-v8a
+        build_webrtc_one ${debug_release} mac x64
     }
 
     [ "`uname`" == "Linux" ] && {
-        android_build_one debug armeabi-v7a
-        # android_build_one release armeabi
-        # android_build_one debug arm64
-        # android_build_one release arm64
+        android_build_one ${debug_release} armeabi-v7a
+        android_build_one ${debug_release} arm64
         
-        ls $WEBRTC_BUILD_ROOT/out/*/*/_libout
-        tar -czvf out/webrtc_${WEBRTC_COMMIT_SHORT}_android.tar.gz -C $WEBRTC_BUILD_ROOT/out/*/*/_libout
+        find $WEBRTC_BUILD_ROOT/out/*/*/_libout
+        (cd $WEBRTC_BUILD_ROOT/out && {
+          tar -czvf webrtc_${WEBRTC_COMMIT_SHORT}_android.tar.gz ${debug_release}/*/_libout
+        })
+        
     }
-
 }
 
+build() {
+  build_webrtc debug
+}
 
 if [[ $# < 1 ]]; then
     echo "Usage: $0 install_dependencies_ubuntu|build"
