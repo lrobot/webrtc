@@ -144,6 +144,8 @@ void AudioState::SetRecording(bool enabled) {
     recording_enabled_ = enabled;
     if (enabled) {
       if (!sending_streams_.empty()) {
+        config_.audio_device_module->InitRecording();
+
         config_.audio_device_module->StartRecording();
       }
     } else {

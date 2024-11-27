@@ -336,11 +336,15 @@ public class PeerConnectionClient {
     final String fieldTrials = getFieldTrials(peerConnectionParameters);
     executor.execute(() -> {
       Log.d(TAG, "Initialize WebRTC. Field trials: " + fieldTrials);
-      PeerConnectionFactory.initialize(
+      try {
+        PeerConnectionFactory.initialize(
           PeerConnectionFactory.InitializationOptions.builder(appContext)
-              .setFieldTrials(fieldTrials)
-              .setEnableInternalTracer(true)
-              .createInitializationOptions());
+            .setFieldTrials(fieldTrials)
+            .setEnableInternalTracer(true)
+            .createInitializationOptions());
+      } catch(Exception e) {
+        reportError("PeerConnectionFactory.initialize err:" + e.toString());
+      }
     });
   }
 
@@ -1342,9 +1346,10 @@ public class PeerConnectionClient {
       }
       final SessionDescription newDesc = new SessionDescription(desc.type, sdp);
       localDescription = newDesc;
+      final String fSdp = sdp;
       executor.execute(() -> {
         if (peerConnection != null && !isError) {
-          Log.d(TAG, "Set local SDP from " + desc.type);
+          Log.d(TAG, "Set local SDP from " + desc.type + ":" + fSdp);
           peerConnection.setLocalDescription(sdpObserver, newDesc);
         }
       });

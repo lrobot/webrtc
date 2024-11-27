@@ -498,7 +498,7 @@ void WebRtcVoiceEngine::ApplyOptions(const AudioOptions& options_in) {
     RTC_LOG(LS_INFO) << "Always disable AEC on iOS. Use built-in instead.";
   }
 #elif defined(WEBRTC_ANDROID)
-  use_mobile_software_aec = true;
+  use_mobile_software_aec = false;
 #endif
 
 // Set and adjust gain control options.

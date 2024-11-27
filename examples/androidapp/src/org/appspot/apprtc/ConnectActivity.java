@@ -18,6 +18,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.media.SoundPool;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -38,6 +41,8 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
 import androidx.annotation.Nullable;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 import org.json.JSONArray;
@@ -64,6 +69,7 @@ public class ConnectActivity extends Activity {
   private String keyprefAudioBitrateType;
   private String keyprefAudioBitrateValue;
   private String keyprefRoomServerUrl;
+	private String keyprefMcuServerUrl;
   private String keyprefRoom;
   private String keyprefRoomList;
   private ArrayList<String> roomList;
@@ -83,6 +89,7 @@ public class ConnectActivity extends Activity {
     keyprefAudioBitrateType = getString(R.string.pref_startaudiobitrate_key);
     keyprefAudioBitrateValue = getString(R.string.pref_startaudiobitratevalue_key);
     keyprefRoomServerUrl = getString(R.string.pref_room_server_url_key);
+	  keyprefMcuServerUrl = getString(R.string.pref_mcu_server_url_key);
     keyprefRoom = getString(R.string.pref_room_key);
     keyprefRoomList = getString(R.string.pref_room_list_key);
 
@@ -366,6 +373,8 @@ public class ConnectActivity extends Activity {
     String roomUrl = sharedPref.getString(
         keyprefRoomServerUrl, getString(R.string.pref_room_server_url_default));
 
+	String mcuUrl = sharedPref.getString(keyprefMcuServerUrl, getString(R.string.pref_mcu_server_url_default));
+
     // Video call enabled flag.
     boolean videoCallEnabled = sharedPrefGetBoolean(R.string.pref_videocall_key,
         CallActivity.EXTRA_VIDEO_CALL, R.string.pref_videocall_default, useValuesFromIntent);
@@ -540,8 +549,86 @@ public class ConnectActivity extends Activity {
     String protocol = sharedPrefGetString(R.string.pref_data_protocol_key,
         CallActivity.EXTRA_PROTOCOL, R.string.pref_data_protocol_default, useValuesFromIntent);
 
+//    if (true&&validateUrl(mcuUrl)) {
+//      mediaPlay();
+//      return;
+//    }
+
     // Start AppRTCMobile activity.
-    Log.d(TAG, "Connecting to room " + roomId + " at URL " + roomUrl);
+	  if (true&&validateUrl(mcuUrl)) {
+		Uri uri = Uri.parse(mcuUrl);
+    roomId = "1234";
+		Intent intent = new Intent(this, McuActivity.class);
+		intent.setData(uri);
+		intent.putExtra(McuActivity.EXTRA_ROOMID, roomId);
+		intent.putExtra(McuActivity.EXTRA_LOOPBACK, loopback);
+		intent.putExtra(McuActivity.EXTRA_VIDEO_CALL, videoCallEnabled);
+		intent.putExtra(McuActivity.EXTRA_SCREENCAPTURE, useScreencapture);
+		intent.putExtra(McuActivity.EXTRA_CAMERA2, useCamera2);
+		intent.putExtra(McuActivity.EXTRA_VIDEO_WIDTH, videoWidth);
+		intent.putExtra(McuActivity.EXTRA_VIDEO_HEIGHT, videoHeight);
+		intent.putExtra(McuActivity.EXTRA_VIDEO_FPS, cameraFps);
+		intent.putExtra(McuActivity.EXTRA_VIDEO_CAPTUREQUALITYSLIDER_ENABLED, captureQualitySlider);
+		intent.putExtra(McuActivity.EXTRA_VIDEO_BITRATE, videoStartBitrate);
+		intent.putExtra(McuActivity.EXTRA_VIDEOCODEC, videoCodec);
+		intent.putExtra(McuActivity.EXTRA_HWCODEC_ENABLED, hwCodec);
+		intent.putExtra(McuActivity.EXTRA_CAPTURETOTEXTURE_ENABLED, captureToTexture);
+		intent.putExtra(McuActivity.EXTRA_FLEXFEC_ENABLED, flexfecEnabled);
+		intent.putExtra(McuActivity.EXTRA_NOAUDIOPROCESSING_ENABLED, noAudioProcessing);
+		intent.putExtra(McuActivity.EXTRA_AECDUMP_ENABLED, aecDump);
+		intent.putExtra(McuActivity.EXTRA_SAVE_INPUT_AUDIO_TO_FILE_ENABLED, saveInputAudioToFile);
+		intent.putExtra(McuActivity.EXTRA_OPENSLES_ENABLED, useOpenSLES);
+		intent.putExtra(McuActivity.EXTRA_DISABLE_BUILT_IN_AEC, disableBuiltInAEC);
+		intent.putExtra(McuActivity.EXTRA_DISABLE_BUILT_IN_AGC, disableBuiltInAGC);
+		intent.putExtra(McuActivity.EXTRA_DISABLE_BUILT_IN_NS, disableBuiltInNS);
+		intent.putExtra(McuActivity.EXTRA_DISABLE_WEBRTC_AGC_AND_HPF, disableWebRtcAGCAndHPF);
+		intent.putExtra(McuActivity.EXTRA_AUDIO_BITRATE, audioStartBitrate);
+		intent.putExtra(McuActivity.EXTRA_AUDIOCODEC, audioCodec);
+		intent.putExtra(McuActivity.EXTRA_DISPLAY_HUD, displayHud);
+		intent.putExtra(McuActivity.EXTRA_TRACING, tracing);
+		intent.putExtra(McuActivity.EXTRA_ENABLE_RTCEVENTLOG, rtcEventLogEnabled);
+		intent.putExtra(McuActivity.EXTRA_CMDLINE, commandLineRun);
+		intent.putExtra(McuActivity.EXTRA_RUNTIME, runTimeMs);
+		intent.putExtra(McuActivity.EXTRA_DATA_CHANNEL_ENABLED, dataChannelEnabled);
+
+		if (dataChannelEnabled) {
+		  intent.putExtra(McuActivity.EXTRA_ORDERED, ordered);
+		  intent.putExtra(McuActivity.EXTRA_MAX_RETRANSMITS_MS, maxRetrMs);
+		  intent.putExtra(McuActivity.EXTRA_MAX_RETRANSMITS, maxRetr);
+		  intent.putExtra(McuActivity.EXTRA_PROTOCOL, protocol);
+		  intent.putExtra(McuActivity.EXTRA_NEGOTIATED, negotiated);
+		  intent.putExtra(McuActivity.EXTRA_ID, id);
+		}
+
+		if (useValuesFromIntent) {
+		  if (getIntent().hasExtra(McuActivity.EXTRA_VIDEO_FILE_AS_CAMERA)) {
+			  String videoFileAsCamera =
+				  getIntent().getStringExtra(McuActivity.EXTRA_VIDEO_FILE_AS_CAMERA);
+			  intent.putExtra(McuActivity.EXTRA_VIDEO_FILE_AS_CAMERA, videoFileAsCamera);
+		  }
+
+		  if (getIntent().hasExtra(McuActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE)) {
+			  String saveRemoteVideoToFile =
+				  getIntent().getStringExtra(McuActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE);
+			  intent.putExtra(McuActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE, saveRemoteVideoToFile);
+		  }
+
+		  if (getIntent().hasExtra(McuActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_WIDTH)) {
+			  int videoOutWidth =
+				  getIntent().getIntExtra(McuActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_WIDTH, 0);
+			  intent.putExtra(McuActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_WIDTH, videoOutWidth);
+		  }
+
+		  if (getIntent().hasExtra(McuActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_HEIGHT)) {
+			  int videoOutHeight =
+				  getIntent().getIntExtra(McuActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_HEIGHT, 0);
+			  intent.putExtra(McuActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_HEIGHT, videoOutHeight);
+		  }
+		}
+		startActivityForResult(intent, CONNECTION_REQUEST);
+		return;
+	}
+  	Log.d(TAG, "Connecting to room " + roomId + " at URL " + roomUrl);
     if (validateUrl(roomUrl)) {
       Uri uri = Uri.parse(roomUrl);
       Intent intent = new Intent(this, CallActivity.class);
@@ -613,6 +700,36 @@ public class ConnectActivity extends Activity {
       }
 
       startActivityForResult(intent, CONNECTION_REQUEST);
+    }
+  }
+
+  private void soundPool() {
+    SoundPool mSoundPool;
+    int mSoundId;
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+      mSoundPool = new SoundPool.Builder()
+        .setMaxStreams(10)
+        .build();
+    } else {
+      mSoundPool = new SoundPool(10, AudioManager.STREAM_MUSIC, 1);
+    }
+
+    mSoundId = mSoundPool.load(this, R.raw.ring, 1);
+    mSoundPool.play(mSoundId, 1, 1, 1, 0, 1);
+  }
+
+
+  private void mediaPlay() {
+    MediaPlayer mediaPlayer = new MediaPlayer();
+    Uri mediaPath = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.ring);
+    mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+    try {
+      mediaPlayer.setDataSource(getApplicationContext(), mediaPath);
+      mediaPlayer.prepare();
+      mediaPlayer.start();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
   }
 

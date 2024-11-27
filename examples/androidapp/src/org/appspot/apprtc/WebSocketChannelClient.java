@@ -53,8 +53,13 @@ public class WebSocketChannelClient {
   // WebSocket send queue. Messages are added to the queue when WebSocket
   // client is not registered and are consumed in register() call.
   private final List<String> wsSendQueue = new ArrayList<>();
+  private boolean sendRegMsg = true;
 
-  /**
+  public void setSendRegMsg(boolean sendRegMsg) {
+    this.sendRegMsg = sendRegMsg;
+  }
+
+	/**
    * Possible WebSocket connection states.
    */
   public enum WebSocketConnectionState { NEW, CONNECTED, REGISTERED, CLOSED, ERROR }
@@ -114,11 +119,13 @@ public class WebSocketChannelClient {
     Log.d(TAG, "Registering WebSocket for room " + roomID + ". ClientID: " + clientID);
     JSONObject json = new JSONObject();
     try {
-      json.put("cmd", "register");
-      json.put("roomid", roomID);
-      json.put("clientid", clientID);
-      Log.d(TAG, "C->WSS: " + json.toString());
-      ws.sendTextMessage(json.toString());
+      if(this.sendRegMsg) {
+        json.put("cmd", "register");
+        json.put("roomid", roomID);
+        json.put("clientid", clientID);
+        Log.d(TAG, "C->WSS: register " + json.toString());
+        ws.sendTextMessage(json.toString());
+      }
       state = WebSocketConnectionState.REGISTERED;
       // Send any previously accumulated messages.
       for (String sendMessage : wsSendQueue) {
@@ -138,6 +145,9 @@ public class WebSocketChannelClient {
         // Store outgoing messages and send them after websocket client
         // is registered.
         Log.d(TAG, "WS ACC: " + message);
+        if(message.startsWith("{\"sdpMLineIndex\"")) {
+          Log.d(TAG, "WS ACC bad msg: " + message);
+        }
         wsSendQueue.add(message);
         return;
       case ERROR:
@@ -149,8 +159,8 @@ public class WebSocketChannelClient {
         try {
           json.put("cmd", "send");
           json.put("msg", message);
-          message = json.toString();
-          Log.d(TAG, "C->WSS: " + message);
+//          message = json.toString();
+          Log.d(TAG, "C->WSS: msg" + message);
           ws.sendTextMessage(message);
         } catch (JSONException e) {
           reportError("WebSocket send JSON error: " + e.getMessage());

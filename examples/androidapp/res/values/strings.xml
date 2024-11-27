@@ -208,6 +208,11 @@
     <string name="pref_room_server_url_dlg">Enter a room server URL.</string>
     <string name="pref_room_server_url_default" translatable="false">https://appr.tc</string>
 
+	<string name="pref_mcu_server_url_key">mcu_server_url_preference</string>
+	<string name="pref_mcu_server_url_title">Mcu server URL.</string>
+	<string name="pref_mcu_server_url_dlg">Enter a mcu server URL.</string>
+	<string name="pref_mcu_server_url_default" translatable="false">https://srv.rbat.tk:8443/kurentomcu</string>
+
     <string name="pref_displayhud_key">displayhud_preference</string>
     <string name="pref_displayhud_title">Display call statistics.</string>
     <string name="pref_displayhud_dlg">Display call statistics.</string>

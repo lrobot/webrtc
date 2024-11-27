@@ -16,6 +16,7 @@ import android.media.AudioDeviceInfo;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
+import android.media.AudioTrack;
 import android.media.AudioRecordingConfiguration;
 import android.media.AudioTimestamp;
 import android.media.MediaRecorder.AudioSource;
@@ -91,6 +92,7 @@ class WebRtcAudioRecord {
   private @Nullable ByteBuffer byteBuffer;
 
   private @Nullable AudioRecord audioRecord;
+  // private @Nullable AudioTrack audioTrack;
   private @Nullable AudioRecordThread audioThread;
   private @Nullable AudioDeviceInfo preferredDevice;
 
@@ -101,6 +103,7 @@ class WebRtcAudioRecord {
   private final AtomicReference<Boolean> audioSourceMatchesRecordingSessionRef =
       new AtomicReference<>();
   private byte[] emptyBytes;
+  private byte[] audioBytes;
 
   private final @Nullable AudioRecordErrorCallback errorCallback;
   private final @Nullable AudioRecordStateCallback stateCallback;
@@ -135,12 +138,40 @@ class WebRtcAudioRecord {
       if (Build.VERSION.SDK_INT >= 24) {
         audioTimestamp = new AudioTimestamp();
       }
+      AudioRecord audioRecordRef = audioRecord;
       while (keepAlive) {
-        int bytesRead = audioRecord.read(byteBuffer, byteBuffer.capacity());
+        int bytesRead = 0;
+        long beforeTime = System.nanoTime();
+        byteBuffer.position(0);
+        if(audioRecordRef!=null) {
+          bytesRead = audioRecord.read(audioBytes, 0, audioBytes.length);
+          byteBuffer.clear();
+          byteBuffer.put(audioBytes);
+        } else {
+          bytesRead = byteBuffer.capacity();
+          byteBuffer.clear();
+          byteBuffer.put(audioBytes);
+          try {
+            Thread.sleep(10);
+          } catch (InterruptedException e) {
+            Logging.e(TAG, "AudioRecordThread sleep error: " + e.getMessage());
+          }
+        }
+        long outTime = System.nanoTime() - beforeTime;
+        // Logging.d(TAG, "AudioRecord.read1: " + bytesRead + " bytes, time: " + outTime);
         if (bytesRead == byteBuffer.capacity()) {
           if (microphoneMute) {
+            if(audioRecordRef!=null) {
+              audioRecordRef.stop();
+              audioRecordRef = null;
+            }
             byteBuffer.clear();
-            byteBuffer.put(emptyBytes);
+            byteBuffer.put(audioBytes);
+          } else {
+            if(audioRecordRef==null) {
+              audioRecordRef = audioRecord;
+              audioRecordRef.startRecording();
+            }
           }
           // It's possible we've been shut down during the read, and stopRecording() tried and
           // failed to join this thread. To be a bit safer, try to avoid calling any native methods
@@ -153,7 +184,9 @@ class WebRtcAudioRecord {
                 captureTimeNs = audioTimestamp.nanoTime;
               }
             }
-            nativeDataIsRecorded(nativeAudioRecord, bytesRead, captureTimeNs);
+            byteBuffer.position(0);
+            nativeDataIsRecorded(nativeAudioRecord, bytesRead, System.nanoTime());
+				  	// audioTrack.write(byteBuffer, bytesRead, AudioTrack.WRITE_NON_BLOCKING);
           }
           if (audioSamplesReadyCallback != null) {
             // Copy the entire byte buffer array. The start of the byteBuffer is not necessarily
@@ -289,6 +322,7 @@ class WebRtcAudioRecord {
     }
     Logging.d(TAG, "byteBuffer.capacity: " + byteBuffer.capacity());
     emptyBytes = new byte[byteBuffer.capacity()];
+    audioBytes = new byte[byteBuffer.capacity()];
     // Rather than passing the ByteBuffer with every callback (requiring
     // the potentially expensive GetDirectBufferAddress) we simply have the
     // the native class cache the address to the memory once.
@@ -327,6 +361,14 @@ class WebRtcAudioRecord {
             audioSource, sampleRate, channelConfig, audioFormat, bufferSizeInBytes);
         audioSourceMatchesRecordingSessionRef.set(null);
       }
+		// audioTrack = new AudioTrack.Builder()
+		// 	  .setAudioFormat(new AudioFormat.Builder()
+		// 		  .setEncoding(audioFormat)
+		// 		  .setSampleRate(sampleRate)
+		// 		  .setChannelMask(channelCountToOutFormat(channels))
+		// 		  .build())
+		// 	  .setBufferSizeInBytes(byteBuffer.capacity())
+		// 	  .build();
     } catch (IllegalArgumentException | UnsupportedOperationException e) {
       // Report of exception message is sufficient. Example: "Cannot create AudioRecord".
       reportWebRtcAudioRecordInitError(e.getMessage());
@@ -378,6 +420,7 @@ class WebRtcAudioRecord {
     assertTrue(audioThread == null);
     try {
       audioRecord.startRecording();
+      //audioTrack.play();
     } catch (IllegalStateException e) {
       reportWebRtcAudioRecordStartError(AudioRecordStartErrorCode.AUDIO_RECORD_START_EXCEPTION,
           "AudioRecord.startRecording failed: " + e.getMessage());
@@ -497,6 +540,9 @@ class WebRtcAudioRecord {
 
   private int channelCountToConfiguration(int channels) {
     return (channels == 1 ? AudioFormat.CHANNEL_IN_MONO : AudioFormat.CHANNEL_IN_STEREO);
+  }
+  private int channelCountToOutFormat(int channels) {
+    return (channels == 1 ? AudioFormat.CHANNEL_OUT_MONO : AudioFormat.CHANNEL_OUT_STEREO);
   }
 
   private native void nativeCacheDirectBufferAddress(

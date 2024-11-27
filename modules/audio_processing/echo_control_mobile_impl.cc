@@ -103,7 +103,7 @@ class EchoControlMobileImpl::Canceller {
 };
 
 EchoControlMobileImpl::EchoControlMobileImpl()
-    : routing_mode_(kSpeakerphone), comfort_noise_enabled_(false) {}
+    : routing_mode_(kLoudSpeakerphone), comfort_noise_enabled_(false) {}
 
 EchoControlMobileImpl::~EchoControlMobileImpl() {}
 

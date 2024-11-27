@@ -64,7 +64,7 @@ build_webrtc_one() {
     arg_target_debugrelease=$1
     arg_target_os=$2
     arg_target_cpu=$3
-  args_val=' treat_warnings_as_errors=true fatal_linker_warnings=true rtc_build_examples=false rtc_include_tests=false ffmpeg_branding = "Chrome" rtc_use_h264=true rtc_use_h265=false rtc_enable_protobuf=false clang_use_chrome_plugins=false enable_dsyms=true  rtc_enable_sctp=false'
+  args_val=' treat_warnings_as_errors=true fatal_linker_warnings=true rtc_build_examples=false rtc_include_tests=false ffmpeg_branding = "Chrome" rtc_use_h264=true rtc_use_h265=false rtc_enable_protobuf=false clang_use_chrome_plugins=false enable_dsyms=true'
   if [ "x$arg_target_debugrelease" == "xdebug" ]; then
     args_val+=' is_debug = true'
   else
@@ -104,7 +104,7 @@ build_webrtc_one() {
   if [ ! -d out/${arg_target_debugrelease}/${arg_target_os}/${arg_target_cpu} ]; then
     gn gen --args="$args_val" out/${arg_target_debugrelease}/${arg_target_os}/${arg_target_cpu}
   fi
-  ninja -C out/${arg_target_debugrelease}/${arg_target_os}/${arg_target_cpu}
+  ninja -vv -C out/${arg_target_debugrelease}/${arg_target_os}/${arg_target_cpu}
   ls -alh out/${arg_target_debugrelease}/${arg_target_os}/${arg_target_cpu}
   popd
 }

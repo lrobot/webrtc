@@ -119,6 +119,13 @@ class WebRtcAudioTrack {
           byteBuffer.put(emptyBytes);
           byteBuffer.position(0);
         }
+        // if(audioTrack.getChannelCount()>1) {
+        //   int channels = audioTrack.getChannelCount();
+        //   for(int i=0; i<sizeInBytes; i+=(channels*2)) {
+        //     byteBuffer.put(i, (byte)0);
+        //     byteBuffer.put(i+1, (byte)0);
+        //   }
+        // }
         int bytesWritten = audioTrack.write(byteBuffer, sizeInBytes, AudioTrack.WRITE_BLOCKING);
         if (bytesWritten != sizeInBytes) {
           Logging.e(TAG, "AudioTrack.write played invalid number of bytes: " + bytesWritten);

@@ -77,6 +77,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
+//	implementation("fi.vtt.nubomedia:kurento-room-client-android:1.1.2")
 	implementation(fileTree(mapOf("include" to listOf("*.aar", "*.jar"),"dir" to "_libs/")))
 	implementation(fileTree(mapOf("include" to listOf("*.aar", "*.jar"),"dir" to "third_party/autobanh/lib")))
 	testImplementation(libs.junit)
